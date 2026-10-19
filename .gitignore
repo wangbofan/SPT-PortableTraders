@@ -1,0 +1,13 @@
+# build output
+bin/
+obj/
+artifacts/
+
+# IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+# local test junk
+.tmp/

@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "showInMainMenu": true,
+  "unlockTraders": true,
+  "deliverQuestRewards": true,
+  "ignoreQuestPrerequisites": false,
+  "traders": [
+    {
+      "traderId": "656f0f98d80a697f855d34b1",
+      "name": "BTR Driver (APC)",
+      "enabled": true
+    },
+    {
+      "traderId": "638f541a29ffd1183d187f57",
+      "name": "Lightkeeper",
+      "enabled": true
+    }
+  ]
+}

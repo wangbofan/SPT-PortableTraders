@@ -1,0 +1,109 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <RootNamespace>PortableTraders</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Library</OutputType>
+        <Version>1.0.0</Version>
+        <OutputPath>bin\$(Configuration)\$(ProjectName)\$(AssemblyName)\</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+
+    <!--
+        The mod is compiled against the assemblies of an installed SPT server (4.1.x), it does not ship them.
+        Point the build at your server folder, either with an environment variable or on the command line:
+
+            setx SPT_SERVER_DIR "D:\SPT\SPT_Runtime"
+            dotnet build -c Release -p:SptServerDir="D:\SPT\SPT_Runtime"
+    -->
+    <PropertyGroup>
+        <SptServerDir Condition="'$(SptServerDir)' == '' and '$(SPT_SERVER_DIR)' != ''">$(SPT_SERVER_DIR)</SptServerDir>
+        <SptServerDir Condition="'$(SptServerDir)' == ''">$(MSBuildThisFileDirectory)..\SPT_Runtime</SptServerDir>
+        <SPTPath>$(SptServerDir)</SPTPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="SPTarkov.Server.Core">
+            <HintPath>$(SptServerDir)\SPTarkov.Server.Core.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="SPTarkov.Common">
+            <HintPath>$(SptServerDir)\SPTarkov.Common.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="SPTarkov.DI">
+            <HintPath>$(SptServerDir)\SPTarkov.DI.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="SPTarkov.Reflection">
+            <HintPath>$(SptServerDir)\SPTarkov.Reflection.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="0Harmony">
+            <HintPath>$(SptServerDir)\0Harmony.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="SemanticVersioning">
+            <HintPath>$(SptServerDir)\SemanticVersioning.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="config\config.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <!-- Gives a readable error instead of a wall of missing-reference warnings when the server folder is wrong. -->
+    <Target Name="CheckSptServerDir" BeforeTargets="ResolveAssemblyReferences">
+        <Error Condition="!Exists('$(SptServerDir)\SPTarkov.Server.Core.dll')"
+               Text="Could not find SPTarkov.Server.Core.dll in '$(SptServerDir)'. Pass the folder of your SPT server, e.g. dotnet build -c Release -p:SptServerDir=&quot;D:\SPT\SPT_Runtime&quot; or set the SPT_SERVER_DIR environment variable." />
+    </Target>
+
+    <Target Name="ForceBuild" BeforeTargets="CoreCompile" Inputs="" Outputs="" />
+
+    <Target Name="DebugCopy" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' and '$(DeployToServer)' == 'true'">
+        <PropertyGroup>
+            <DebugStaging>$(SPTPath)\user\mods\$(ProjectName)</DebugStaging>
+        </PropertyGroup>
+
+        <MakeDir Directories="$(DebugStaging)" ContinueOnError="WarnAndContinue" />
+
+        <ItemGroup>
+            <DebugDlls Include="$(OutputPath)*.dll" />
+            <DebugPdb Include="$(OutputPath)*.pdb" />
+            <ConfigFolder Include="$(OutputPath)config\**\*.*" />
+        </ItemGroup>
+
+        <Message Importance="high" Text="Debug build detected. Copying files to $(DebugStaging)" />
+
+        <Copy SourceFiles="@(DebugDlls)" DestinationFolder="$(DebugStaging)" SkipUnchangedFiles="false" ContinueOnError="WarnAndContinue" />
+        <Copy SourceFiles="@(DebugPdb)" DestinationFolder="$(DebugStaging)" SkipUnchangedFiles="false" ContinueOnError="WarnAndContinue" />
+        <Copy SourceFiles="@(ConfigFolder)" DestinationFiles="@(ConfigFolder->'$(DebugStaging)\config\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+    </Target>
+
+    <!-- Release builds are staged here: artifacts\PortableTraders\SPT\user\mods\PortableTraders -->
+    <Target Name="StagingForge" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+        <PropertyGroup>
+            <StagingDir Condition="'$(StagingDir)' == ''">$(MSBuildThisFileDirectory)artifacts\$(ProjectName)\SPT\user\mods\$(ProjectName)</StagingDir>
+        </PropertyGroup>
+
+        <MakeDir Directories="$(StagingDir)" Condition="!Exists('$(StagingDir)')" />
+
+        <ItemGroup>
+            <DllFiles Include="$(OutputPath)*.dll" />
+            <ConfigFolder Include="$(OutputPath)config\**\*.*" />
+        </ItemGroup>
+
+        <Message Importance="high" Text="Copying DLLs to staging: $(StagingDir)" />
+
+        <Copy SourceFiles="@(DllFiles)" DestinationFolder="$(StagingDir)" SkipUnchangedFiles="true" ContinueOnError="false" />
+        <Copy SourceFiles="@(ConfigFolder)" DestinationFiles="@(ConfigFolder->'$(StagingDir)\config\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" ContinueOnError="false" />
+
+        <Message Importance="high" Text="Staging complete." />
+    </Target>
+
+</Project>
