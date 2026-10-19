@@ -1,6 +1,6 @@
 # PortableTraders（随身商人）
 
-[![SPT](https://img.shields.io/badge/SPT-4.1.6-blue)](https://www.sp-tarkov.com/) ![platform](https://img.shields.io/badge/platform-server--side%20only-green) ![license](https://img.shields.io/badge/license-MIT-lightgrey)
+[![SPT](https://img.shields.io/badge/SPT-4.1.2%20~%204.1.6-blue)](https://www.sp-tarkov.com/) ![platform](https://img.shields.io/badge/platform-server--side%20only-green) ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
 > **English** — Server-side SPT mod that turns the **BTR driver** and the **Lightkeeper** into ordinary traders you can use
 > from the main menu: accept and hand in their tasks outside a raid, and their quest rewards land in your in-game mail
@@ -11,7 +11,7 @@
 把 **BTR 司机（APC）** 和 **灯塔商人（Lightkeeper）** 这两个“只能在战局里交易/交任务”的商人，
 变成和普通商人一样、在**主界面**就能接任务、交任务、领奖励的商人。
 
-- 适用版本：**SPT 4.1.6**（服务端 4.1.x）
+- 适用版本：**SPT 4.1.2 – 4.1.6**（服务端 4.1.x）。编译时引用的是 4.1.2 的 API，所以向下兼容到 4.1.2，向上兼容 4.1.6；1.1.0 在 4.1.6 上实测通过
 - 纯服务端 C# mod，**不需要任何前置 mod**，不需要客户端插件
 - 可用于 **Fika 无头服（headless）**：所有改动都在服务端，客户端会自动拿到改过的商人数据
 - 许可证：MIT
@@ -50,7 +50,7 @@ SPT_Runtime/
 2. 重启服务端。日志里应出现：
 
 ```
-模组：PortableTraders 版本1.0.0 (GUID: com.portabletraders.core | targets SPT: ~4.1.6) 作者：PortableTraders 已加载
+模组：PortableTraders 版本1.1.0 (GUID: com.portabletraders.core | targets SPT: ~4.1.2) 作者：PortableTraders 已加载
 [PortableTraders] BTR Driver (APC) (656f0f98d80a697f855d34b1): main menu = True, unlocked = True, quest rewards by mail = True.
 [PortableTraders] Lightkeeper (638f541a29ffd1183d187f57): main menu = True, unlocked = True, quest rewards by mail = True.
 [PortableTraders] Loaded: 2 portable trader(s), 30 task(s) reachable from the main menu.
@@ -110,6 +110,20 @@ SPT_Runtime/
 
 ---
 
+## 版本兼容
+
+| SPT 版本 | 支持 |
+| --- | --- |
+| 4.1.2 – 4.1.6 | ✅ 支持（mod 的 `SptVersion` 要求 `~4.1.2`，即 4.1.2 ≤ 版本 < 4.2.0） |
+| 4.0.x | ❌ 不加载（4.0 → 4.1 之间有破坏性 API 变动） |
+| 4.2.x 及以后 | ❌ 版本门控会拒绝加载，等确认 API 后再放宽 |
+
+> 说明：mod 是编译时绑定服务端 `SPTarkov.Server.Core.dll` 的。为了兼容 4.1.5 这类较早的 4.1.x，
+> 1.1.0 改成用 **4.1.2 的 API 面**编译（产物只引用 4.1.2 就存在的成员），然后在 **4.1.6** 上跑完整流程验证——
+> 所以 4.1.2 ~ 4.1.6 用的是同一个 dll，不需要分开下载。
+
+---
+
 ## 已验证（SPT 4.1.6 实测）
 
 - `/client/trading/api/traderSettings`：BTR / Lightkeeper 的 `availableInRaid = false`、`unlockedByDefault = true`
@@ -118,6 +132,7 @@ SPT_Runtime/
 - 交任务 → 状态 Completed，经验 +25400，邮箱收到 `successMessageText` 邮件，
   `hasRewards = true`、附件里有卢布和武器（原本会被跳过的地方）
 - 灯塔商人 `67a09761e720611a6a01f288`（Keepers Word）同样接取/提交成功，邮件附件 4 件（美金 4284、Virtex 处理器等），经验 +56800
+- 1.1.0（用 4.1.2 的 API 编译）在 SPT 4.1.6 上重复上述流程：商人设置、任务列表、接单、交单、邮件 4 件奖励全部正常
 
 ---
 
